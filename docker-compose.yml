@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pizfrat
+      POSTGRES_PASSWORD: pizfrat
+      POSTGRES_DB: pizfrat
+    ports:
+      - "5433:5432"
+    volumes:
+      - pizfrat_db_data:/var/lib/postgresql/data
+
+volumes:
+  pizfrat_db_data:

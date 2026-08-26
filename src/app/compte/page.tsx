@@ -1,0 +1,45 @@
+import { SpaceHeader } from "@/components/space-header";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+
+export default async function ComptePage() {
+  const session = await auth();
+  const user = await prisma.user.findUnique({
+    where: { id: session!.user.id },
+    include: { orders: { orderBy: { createdAt: "desc" }, take: 5 } },
+  });
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <SpaceHeader title="Mon compte" />
+      <main className="flex-1 space-y-6 p-4">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4">
+          <p className="text-sm text-neutral-500">Cumul fidélité</p>
+          <p className="text-2xl font-semibold text-red-800">
+            {((user?.loyaltyCentsCumulated ?? 0) / 100).toFixed(2)} €
+          </p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-medium text-neutral-500">
+            Dernières commandes
+          </h2>
+          <div className="space-y-2">
+            {user?.orders.length === 0 && (
+              <p className="text-sm text-neutral-500">Aucune commande pour l&apos;instant.</p>
+            )}
+            {user?.orders.map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-3"
+              >
+                <span>#{order.id.slice(-6)} — {order.mode}</span>
+                <span className="text-sm text-neutral-500">{order.status}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

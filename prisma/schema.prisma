@@ -1,0 +1,315 @@
+// Pizza Fratelli — schema de données
+// Basé sur le cahier des charges fonctionnel (docs/Pizza_Fratelli_Cahier_des_charges.docx)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Enums -------------------------------------------------------------
+
+enum Role {
+  CLIENT
+  ADMIN
+  CUISINIER
+  LIVREUR
+}
+
+enum OrderMode {
+  LIVRAISON
+  EMPORTER
+}
+
+// Cycle de vie d'une commande — cf. §7.1 du cahier des charges.
+enum OrderStatus {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+  EN_PREPARATION
+  PRETE
+  EN_LIVRAISON
+  LIVREE
+  RETIREE
+  CLOTUREE
+  ANNULEE
+}
+
+enum DeliveryProposalStatus {
+  PROPOSEE
+  ACCEPTEE
+  REFUSEE
+  EXPIREE
+}
+
+enum RoomZone {
+  SALLE
+  TERRASSE
+}
+
+enum RoomAvailability {
+  DISPONIBLE
+  COMPLET
+}
+
+enum ReservationStatus {
+  CONFIRMEE
+  ANNULEE
+}
+
+enum PromotionAudience {
+  CIBLEE
+  GENERALE
+}
+
+enum FeedbackStatus {
+  OUVERT
+  EN_COURS
+  RESOLU
+}
+
+// --- Utilisateurs et accès ---------------------------------------------
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  phone        String?
+  passwordHash String
+  name         String
+  role         Role    @default(CLIENT)
+  disabled     Boolean @default(false)
+
+  // Fidélité — cumul en centimes pour éviter les erreurs d'arrondi flottant.
+  loyaltyCentsCumulated Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses          Address[]
+  orders             Order[]
+  reservations       Reservation[]
+  reviews            Review[]
+  feedbacks          Feedback[]
+  deliveryProposals  DeliveryProposal[]
+  targetedPromotions PromotionTarget[]
+
+  @@index([role])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String
+  line1      String
+  postalCode String
+  city       String
+  isDefault  Boolean @default(false)
+
+  orders Order[]
+
+  @@index([userId])
+}
+
+// --- Carte / produits ----------------------------------------------------
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  position Int       @default(0)
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  name        String
+  description String
+  priceCents  Int
+  imageUrl    String?
+  allergens   String[] @default([])
+  available   Boolean  @default(true)
+
+  supplements Supplement[]
+  orderItems  OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+}
+
+// Supplément proposé pour un produit donné (§4.4).
+model Supplement {
+  id         String  @id @default(cuid())
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String
+  priceCents Int
+  available  Boolean @default(true)
+
+  orderItemSupplements OrderItemSupplement[]
+
+  @@index([productId])
+}
+
+// --- Commandes -------------------------------------------------------------
+
+model Order {
+  id     String      @id @default(cuid())
+  userId String
+  user   User        @relation(fields: [userId], references: [id])
+  mode   OrderMode
+  status OrderStatus @default(EN_ATTENTE)
+
+  addressId String?
+  address   Address? @relation(fields: [addressId], references: [id])
+
+  totalCents        Int
+  estimatedMinutes  Int
+  extraDelayMinutes Int @default(0)
+
+  items             OrderItem[]
+  deliveryProposals DeliveryProposal[]
+  feedbacks         Feedback[]
+
+  createdAt         DateTime  @default(now())
+  acceptedAt        DateTime?
+  kitchenAcceptedAt DateTime?
+  readyAt           DateTime?
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+  closedAt          DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product @relation(fields: [productId], references: [id])
+  quantity       Int     @default(1)
+  unitPriceCents Int
+
+  supplements OrderItemSupplement[]
+
+  @@index([orderId])
+}
+
+model OrderItemSupplement {
+  id           String     @id @default(cuid())
+  orderItemId  String
+  orderItem    OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  supplementId String
+  supplement   Supplement @relation(fields: [supplementId], references: [id])
+  priceCents   Int
+
+  @@index([orderItemId])
+}
+
+// Proposition de livraison à un livreur, avec réattribution automatique (§6.1, §7.2).
+model DeliveryProposal {
+  id          String                 @id @default(cuid())
+  orderId     String
+  order       Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  livreurId   String
+  livreur     User                   @relation(fields: [livreurId], references: [id])
+  status      DeliveryProposalStatus @default(PROPOSEE)
+  proposedAt  DateTime               @default(now())
+  respondedAt DateTime?
+  expiresAt   DateTime
+
+  @@index([orderId])
+  @@index([livreurId])
+}
+
+// --- Fidélisation ----------------------------------------------------------
+
+model Promotion {
+  id          String            @id @default(cuid())
+  title       String
+  description String
+  audience    PromotionAudience
+  startAt     DateTime
+  endAt       DateTime
+  createdAt   DateTime          @default(now())
+
+  targets PromotionTarget[]
+}
+
+model PromotionTarget {
+  id          String    @id @default(cuid())
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, userId])
+}
+
+// --- Salle et réservations ---------------------------------------------------
+
+model Reservation {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  zone      RoomZone
+  date      DateTime
+  partySize Int
+  status    ReservationStatus @default(CONFIRMEE)
+  createdAt DateTime          @default(now())
+
+  @@index([userId])
+  @@index([date])
+}
+
+// --- Avis et support ---------------------------------------------------------
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  rating     Int
+  comment    String
+  published  Boolean  @default(true)
+  adminReply String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Feedback {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  orderId     String?
+  order       Order?         @relation(fields: [orderId], references: [id])
+  message     String
+  status      FeedbackStatus @default(OUVERT)
+  resolution  String?
+  refundCents Int?
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+// --- Configuration du restaurant (singleton) ------------------------------
+
+model RestaurantSettings {
+  id                     String           @id @default("settings")
+  orderingOpen           Boolean          @default(true)
+  cashbackThresholdCents Int              @default(10000)
+  roomStatus             RoomAvailability @default(DISPONIBLE)
+  terraceStatus          RoomAvailability @default(DISPONIBLE)
+  deliveryPostalCodes    String[]         @default([])
+  updatedAt              DateTime         @updatedAt
+}
