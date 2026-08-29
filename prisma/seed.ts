@@ -23,13 +23,27 @@ async function main() {
   await prisma.restaurantSettings.upsert({
     where: { id: "settings" },
     update: {},
-    create: { id: "settings" },
+    create: { id: "settings", deliveryPostalCodes: ["75001", "75002", "75003"] },
   });
 
   await upsertUser("admin@pizzafratelli.fr", "Gérant Fratelli", "ADMIN", "admin1234");
   await upsertUser("cuisine@pizzafratelli.fr", "Chef Cuisinier", "CUISINIER", "cuisine1234");
   await upsertUser("livreur@pizzafratelli.fr", "Livreur Test", "LIVREUR", "livreur1234");
-  await upsertUser("client@pizzafratelli.fr", "Client Test", "CLIENT", "client1234");
+  const client = await upsertUser("client@pizzafratelli.fr", "Client Test", "CLIENT", "client1234");
+
+  await prisma.address.upsert({
+    where: { id: "seed-address-client" },
+    update: {},
+    create: {
+      id: "seed-address-client",
+      userId: client.id,
+      label: "Domicile",
+      line1: "12 rue de Rivoli",
+      postalCode: "75001",
+      city: "Paris",
+      isDefault: true,
+    },
+  });
 
   const pizzas = await prisma.category.upsert({
     where: { name: "Pizzas" },

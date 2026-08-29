@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SpaceHeader } from "@/components/space-header";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +21,13 @@ export default async function ComptePage() {
           </p>
         </section>
 
+        <Link
+          href="/"
+          className="block rounded-lg bg-red-800 py-2.5 text-center font-medium text-white hover:bg-red-900"
+        >
+          Commander
+        </Link>
+
         <section>
           <h2 className="mb-2 text-sm font-medium text-neutral-500">
             Dernières commandes
@@ -29,13 +37,14 @@ export default async function ComptePage() {
               <p className="text-sm text-neutral-500">Aucune commande pour l&apos;instant.</p>
             )}
             {user?.orders.map((order) => (
-              <div
+              <Link
                 key={order.id}
+                href={`/commandes/${order.id}`}
                 className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-3"
               >
                 <span>#{order.id.slice(-6)} — {order.mode}</span>
                 <span className="text-sm text-neutral-500">{order.status}</span>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
