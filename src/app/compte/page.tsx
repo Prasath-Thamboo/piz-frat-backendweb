@@ -36,6 +36,15 @@ export default async function ComptePage() {
           </Link>
         </div>
 
+        <div className="flex gap-3 text-sm">
+          <Link href="/avis" className="flex-1 text-center text-neutral-600 underline">
+            Avis clients
+          </Link>
+          <Link href="/aide" className="flex-1 text-center text-neutral-600 underline">
+            Aide / signaler un problème
+          </Link>
+        </div>
+
         <section>
           <h2 className="mb-2 text-sm font-medium text-neutral-500">
             Dernières commandes

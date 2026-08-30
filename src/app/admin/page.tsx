@@ -18,12 +18,30 @@ export default async function AdminHome() {
     <div className="flex min-h-screen flex-col">
       <SpaceHeader title="Espace administrateur" />
       <main className="flex-1 space-y-6 p-4">
-        <nav className="flex gap-2">
+        <nav className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/carte"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Gestion de la carte
+          </Link>
           <Link
             href="/admin/reservations"
             className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
           >
             Salle et réservations
+          </Link>
+          <Link
+            href="/admin/avis"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Avis clients
+          </Link>
+          <Link
+            href="/admin/signalements"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Signalements
           </Link>
         </nav>
 
