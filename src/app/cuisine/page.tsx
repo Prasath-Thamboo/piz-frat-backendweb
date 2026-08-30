@@ -1,4 +1,5 @@
 import { SpaceHeader } from "@/components/space-header";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { prisma } from "@/lib/prisma";
 import { OrderActions } from "./order-actions";
 
@@ -19,6 +20,7 @@ export default async function CuisinePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <RealtimeRefresh />
       <SpaceHeader title="Espace cuisine" />
       <main className="flex-1 space-y-3 p-4">
         {orders.length === 0 && (

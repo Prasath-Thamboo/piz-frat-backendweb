@@ -1,48 +1,10 @@
-import { encode, decode } from "@auth/core/jwt";
+import { NextResponse } from "next/server";
 import type { Role } from "@/generated/prisma/enums";
+import { verifyMobileToken } from "@/lib/mobile-token";
+import type { MobileTokenPayload } from "@/lib/mobile-token";
 
-// Jeton mobile indépendant du cookie de session web (NextAuth) : même
-// AUTH_SECRET, mais un salt dédié pour ne pas dépendre du nom interne du
-// cookie NextAuth (qui varie selon l'environnement).
-const SALT = "pizza-fratelli-mobile";
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 jours
-
-export type MobileTokenPayload = {
-  sub: string;
-  role: Role;
-  name: string;
-  email: string;
-};
-
-function requireSecret(): string {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) throw new Error("AUTH_SECRET manquant.");
-  return secret;
-}
-
-export async function signMobileToken(user: MobileTokenPayload): Promise<string> {
-  return encode({
-    secret: requireSecret(),
-    salt: SALT,
-    maxAge: MAX_AGE_SECONDS,
-    token: user,
-  });
-}
-
-export async function verifyMobileToken(
-  token: string,
-): Promise<MobileTokenPayload | null> {
-  try {
-    const payload = await decode<MobileTokenPayload>({
-      secret: requireSecret(),
-      salt: SALT,
-      token,
-    });
-    return payload?.sub ? payload : null;
-  } catch {
-    return null;
-  }
-}
+export { signMobileToken, verifyMobileToken } from "@/lib/mobile-token";
+export type { MobileTokenPayload } from "@/lib/mobile-token";
 
 export async function getMobileUser(
   req: Request,
@@ -50,4 +12,17 @@ export async function getMobileUser(
   const header = req.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) return null;
   return verifyMobileToken(header.slice("Bearer ".length));
+}
+
+// Garde d'accès partagée par les routes mobile réservées à un rôle
+// (espaces cuisine/livreur, §4.12/§5.2/§10.2) : renvoie soit le payload
+// authentifié, soit une réponse d'erreur déjà prête à retourner telle quelle.
+export async function requireMobileRole(
+  req: Request,
+  role: Role,
+): Promise<MobileTokenPayload | NextResponse> {
+  const auth = await getMobileUser(req);
+  if (!auth) return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
+  if (auth.role !== role) return NextResponse.json({ error: "Non autorisé." }, { status: 403 });
+  return auth;
 }

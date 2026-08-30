@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { CancelButton } from "./cancel-button";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -37,6 +38,7 @@ export default async function CommandePage(
 
   return (
     <div className="flex min-h-screen flex-col">
+      <RealtimeRefresh />
       <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-neutral-400">

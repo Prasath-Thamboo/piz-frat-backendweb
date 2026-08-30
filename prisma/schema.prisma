@@ -311,5 +311,9 @@ model RestaurantSettings {
   roomStatus             RoomAvailability @default(DISPONIBLE)
   terraceStatus          RoomAvailability @default(DISPONIBLE)
   deliveryPostalCodes    String[]         @default([])
+  // Délai additionnel courant en cas de forte affluence (§4.2) : appliqué aux
+  // commandes en cours au moment du réglage, et repris comme extraDelayMinutes
+  // initial des commandes créées tant que ce réglage n'est pas remis à zéro.
+  currentExtraDelayMinutes Int            @default(0)
   updatedAt              DateTime         @updatedAt
 }

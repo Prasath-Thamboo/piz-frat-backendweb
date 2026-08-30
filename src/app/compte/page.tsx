@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SpaceHeader } from "@/components/space-header";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -12,6 +13,7 @@ export default async function ComptePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <RealtimeRefresh />
       <SpaceHeader title="Mon compte" />
       <main className="flex-1 space-y-6 p-4">
         <section className="rounded-xl border border-neutral-200 bg-white p-4">

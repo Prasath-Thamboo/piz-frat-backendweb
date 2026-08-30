@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { notifyUser } from "@/lib/realtime";
 
 // Délai de réponse laissé à un livreur avant réattribution automatique
 // (§6.1, §7.2). Aucune valeur n'est fixée par le cahier des charges ;
@@ -38,6 +39,8 @@ export async function assignNextLivreur(orderId: string): Promise<void> {
       expiresAt: new Date(Date.now() + PROPOSAL_TTL_MINUTES * 60 * 1000),
     },
   });
+
+  notifyUser(chosen.id, "Nouvelle proposition de livraison.");
 }
 
 // Vérification paresseuse des propositions expirées : à défaut de tâche de
@@ -79,7 +82,7 @@ export async function acceptProposal(
     return { error: "Le délai de réponse est dépassé, la commande a été réattribuée." };
   }
 
-  await prisma.$transaction([
+  const [, order] = await prisma.$transaction([
     prisma.deliveryProposal.update({
       where: { id: proposalId },
       data: { status: "ACCEPTEE", respondedAt: new Date() },
@@ -89,6 +92,9 @@ export async function acceptProposal(
       data: { status: "EN_LIVRAISON" },
     }),
   ]);
+
+  notifyUser(order.userId, "Votre commande est en cours de livraison.");
+
   return { ok: true };
 }
 
@@ -137,5 +143,8 @@ export async function markDelivered(
       data: { loyaltyCentsCumulated: { increment: order.totalCents } },
     }),
   ]);
+
+  notifyUser(order.userId, "Votre commande a été livrée. Bon appétit !");
+
   return { ok: true };
 }

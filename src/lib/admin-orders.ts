@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { notifyRole, notifyUser } from "@/lib/realtime";
 
 // Étape d'acceptation par l'administrateur (§4.1, §7.1). Elle précède et
 // reste distincte de la prise en charge par la cuisine (§5.1) : le champ
@@ -16,6 +17,10 @@ export async function acceptOrder(orderId: string): Promise<{ error: string } | 
     where: { id: orderId },
     data: { status: "ACCEPTEE", acceptedAt: new Date() },
   });
+
+  notifyUser(order.userId, "Votre commande a été acceptée par le restaurant.");
+  notifyRole("CUISINIER", "Une nouvelle commande est prête à être préparée.");
+
   return { ok: true };
 }
 
@@ -30,5 +35,8 @@ export async function refuseOrder(orderId: string): Promise<{ error: string } | 
     where: { id: orderId },
     data: { status: "REFUSEE" },
   });
+
+  notifyUser(order.userId, "Votre commande a été refusée par le restaurant.");
+
   return { ok: true };
 }

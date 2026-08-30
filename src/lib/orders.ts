@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Address } from "@/generated/prisma/client";
+import { notifyRole } from "@/lib/realtime";
 
 // Logique métier partagée entre les server actions web (src/app/panier,
 // src/app/commandes) et l'API mobile (src/app/api/mobile) : une seule
@@ -115,9 +116,12 @@ export async function createOrderForUser(
       addressId,
       totalCents,
       estimatedMinutes: BASE_ESTIMATED_MINUTES[input.mode],
+      extraDelayMinutes: settings.currentExtraDelayMinutes,
       items: { create: itemsData },
     },
   });
+
+  notifyRole("ADMIN", "Nouvelle commande reçue.");
 
   return { orderId: order.id };
 }
@@ -161,6 +165,8 @@ export async function cancelOrderForUser(
     where: { id: orderId },
     data: { status: "ANNULEE", cancelledAt: new Date() },
   });
+
+  notifyRole("ADMIN", "Une commande a été annulée par le client.");
 
   return { ok: true };
 }

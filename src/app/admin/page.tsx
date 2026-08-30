@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SpaceHeader } from "@/components/space-header";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { prisma } from "@/lib/prisma";
 import { OrderActions } from "./order-actions";
 
@@ -16,6 +17,7 @@ export default async function AdminHome() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <RealtimeRefresh />
       <SpaceHeader title="Espace administrateur" />
       <main className="flex-1 space-y-6 p-4">
         <nav className="flex flex-wrap gap-2">
@@ -26,10 +28,40 @@ export default async function AdminHome() {
             Gestion de la carte
           </Link>
           <Link
+            href="/admin/horaires"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Délais et prise de commande
+          </Link>
+          <Link
             href="/admin/reservations"
             className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
           >
             Salle et réservations
+          </Link>
+          <Link
+            href="/admin/historique"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Historique global
+          </Link>
+          <Link
+            href="/admin/statistiques"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Statistiques
+          </Link>
+          <Link
+            href="/admin/promotions"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Promotions et fidélité
+          </Link>
+          <Link
+            href="/admin/utilisateurs"
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+          >
+            Utilisateurs
           </Link>
           <Link
             href="/admin/avis"

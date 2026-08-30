@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { assignNextLivreur } from "@/lib/delivery";
+import { notifyRole, notifyUser } from "@/lib/realtime";
 
 // Prise en charge par la cuisine (§5.1) : distincte de l'acceptation admin
 // (src/lib/admin-orders.ts), cf. §5.2.
@@ -14,6 +15,10 @@ export async function takeOrder(orderId: string): Promise<{ error: string } | { 
     where: { id: orderId },
     data: { status: "EN_PREPARATION", kitchenAcceptedAt: new Date() },
   });
+
+  notifyUser(order.userId, "Votre commande est en préparation.");
+  notifyRole("CUISINIER", "Une commande a été prise en charge.");
+
   return { ok: true };
 }
 
@@ -30,6 +35,9 @@ export async function markReady(orderId: string): Promise<{ error: string } | { 
     where: { id: orderId },
     data: { status: "PRETE", readyAt: new Date() },
   });
+
+  notifyUser(order.userId, "Votre commande est prête.");
+  notifyRole("CUISINIER", "Une commande est passée au statut prête.");
 
   if (order.mode === "LIVRAISON") {
     await assignNextLivreur(orderId);
@@ -59,5 +67,9 @@ export async function markRetrieved(orderId: string): Promise<{ error: string } 
       data: { loyaltyCentsCumulated: { increment: order.totalCents } },
     }),
   ]);
+
+  notifyUser(order.userId, "Commande retirée, merci et à bientôt !");
+  notifyRole("CUISINIER", "Une commande a été retirée par le client.");
+
   return { ok: true };
 }

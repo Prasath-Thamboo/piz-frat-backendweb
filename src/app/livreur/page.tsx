@@ -1,4 +1,5 @@
 import { SpaceHeader } from "@/components/space-header";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { expireStaleProposalsAndReassign } from "@/lib/delivery";
@@ -27,6 +28,7 @@ export default async function LivreurPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <RealtimeRefresh />
       <SpaceHeader title="Espace livreur" />
       <main className="flex-1 space-y-6 p-4">
         <section className="space-y-3">
