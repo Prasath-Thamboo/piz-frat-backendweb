@@ -21,12 +21,20 @@ export default async function ComptePage() {
           </p>
         </section>
 
-        <Link
-          href="/"
-          className="block rounded-lg bg-red-800 py-2.5 text-center font-medium text-white hover:bg-red-900"
-        >
-          Commander
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/"
+            className="flex-1 rounded-lg bg-red-800 py-2.5 text-center font-medium text-white hover:bg-red-900"
+          >
+            Commander
+          </Link>
+          <Link
+            href="/reservations"
+            className="flex-1 rounded-lg border border-red-800 py-2.5 text-center font-medium text-red-800 hover:bg-red-50"
+          >
+            Réserver une table
+          </Link>
+        </div>
 
         <section>
           <h2 className="mb-2 text-sm font-medium text-neutral-500">
